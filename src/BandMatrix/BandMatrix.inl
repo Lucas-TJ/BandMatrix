@@ -21,29 +21,126 @@
 ******************************************************************************/
 #pragma once
 #include <sofa/linearalgebra/config.h>
-
-#include <BandMatrix.h>
+#include <sofa/type/Mat.h>
+#include <BandMatrix/BandMatrix.h>
 
 namespace sofa::linearalgebra
 {
 
     template<typename T>
     BandMatrix<T>::BandMatrix()
-        : data(nullptr), nTRow(0), nTCol(0), nBRow(0), nBCol(0), allocsize(0)
+        : data(), nbRow(0), nbCol(0), bandwidth(1)
     {
     }
 
     template<typename T>
     BandMatrix<T>::~BandMatrix()
     {
-        if (allocsize>0)
-            delete[] data;
+        
     }
+
+    
+    template<typename T>
+    void BandMatrix<T>::resize(Index nr, Index nc)
+    {
+        nbRow = nr;
+        nbCol = nc;
+        data.resize(bandwidth);
+        for (Index i = 0; i < bandwidth; ++i)
+        {
+            data[i].resize(nbCol);
+        }
+        
+    }
+
+    template<typename T>
+    void BandMatrix<T>::insideBand(Index i, Index j, int banded_i)
+    {     
+        if (( banded_i < 0 ) || (banded_i > bandwidth))
+        {
+            Index ki; 
+            const int oldbandwidth = bandwidth;
+            bandwidth = std::max(2*i + 1, 2*j + 1); 
+
+            int nbAdd; 
+            nbAdd = (bandwidth - oldbandwidth)/2;
+            
+            resize(nbRow,nbCol);
+            
+            for (ki = oldbandwidth-1; ki>-1; ki--)
+            {
+                data[ki+nbAdd] = data[ki];
+            }
+            
+            for (ki = 0; ki < nbAdd; ki++)
+            {
+                data[ki].clear();
+            }
+
+            banded_i = getBandIndex(bandwidth, i,j); 
+        }
+    }
+
+    template<typename T>
+    void BandMatrix<T>::add(Index i, Index j, double v)
+    {
+        int banded_i = getBandIndex(bandwidth, i,j);
+        insideBand(i,j,banded_i);
+        data[banded_i][j] += v;
+        
+    } 
 
     template<typename T>
     SReal BandMatrix<T>::element(Index i, Index j) const
     {
-        
+        Index banded_i = getBandIndex(bandwidth, i,j);
+        if (( banded_i >= 0 ) && (banded_i < bandwidth)) return data[banded_i][j];
+        else return 0;
+            
     }
 
+    template<typename T>
+    typename BandMatrix<T>::Index BandMatrix<T>::getBandIndex(Index i, Index j, int bandwidth) const
+    {
+        return (bandwidth-1)/2 + i - j;
+    }
+
+    template<typename T>
+    void BandMatrix<T>::set(Index i, Index j, double v)
+    {
+        int banded_i = getBandIndex(bandwidth, i,j);
+        insideBand(i,j,banded_i);
+        data[banded_i][j] = v;
+        
+    } 
+
+
+
+    
+    template<typename T>
+    typename BandMatrix<T>::Index BandMatrix<T>::rowSize() const
+    {
+        return nbRow;
+    }
+    template<typename T>
+    typename BandMatrix<T>::Index BandMatrix<T>::colSize() const
+    {
+        return nbCol;
+    }
+  
+    template<typename T>
+    void BandMatrix<T>::clear()
+    {
+        // nbRow = 0;
+        // nbCol = 0;
+        // bandwidth = 0;
+        // data.clear();
+
+        for (auto& d : data)
+            for (auto& e : d)
+                e = 0;
+    }
+    
+
+    
 }

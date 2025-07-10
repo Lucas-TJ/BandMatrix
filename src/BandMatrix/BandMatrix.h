@@ -21,16 +21,19 @@
 ******************************************************************************/
 #pragma once
 #include <sofa/linearalgebra/config.h>
-
+#include <sofa/type/Mat.h>
 #include <sofa/linearalgebra/BaseMatrix.h>
 #include <sofa/linearalgebra/BlockFullMatrix.h>
 #include <sofa/linearalgebra/FullVector.h>
 #include <sofa/linearalgebra/matrix_bloc_traits.h>
+#include <sofa/type/vector.h>
+
+#include <map>
 
 namespace sofa::linearalgebra
 {
-    
-    /// Simple banded matrix container (with block ?)
+    using sofa::type::vector;
+    /// Simple banded matrix container
     template<typename T>
     class BandMatrix : public linearalgebra::BaseMatrix
     {
@@ -39,12 +42,17 @@ namespace sofa::linearalgebra
             enum { category = MATRIX_BAND };
             typedef T Real;
             typedef typename linearalgebra::BaseMatrix::Index Index;
-
+            ///typedef typename sofa::type::vector vector;
+            
 
 
         protected:
-            SReal* data;
+            sofa::type::vector<sofa::type::vector<T>> data;
+            SReal* StoredData;
             Index nbRow, nbCol;
+            Index bandwidth;
+            Index getBandIndex(Index i, Index j, int bandwidth) const;
+            void insideBand(Index i, Index j, int band);
             
         
         public:
@@ -60,39 +68,21 @@ namespace sofa::linearalgebra
 
             SReal element(Index i, Index j) const override;
 
-            void set(Index i, Index j, double v) override
-            {
-            }
+            void set(Index i, Index j, double v) override;
 
-            void add(Index i, Index j, double v) override
-            {
-            }
-            void clear(Index i, Index j);
-            void clearRow(Index i);
-            void clearCol(Index j);
-            void clearRowCol(Index i);
-            void clear() ;
-            Index getBandWidth() const {return -1;}
+            void add(Index i, Index j, double v) override;
+
+            void clear() override;
+            
+
+           
+            
+            
 
 
-
-            class StoredMatrix : public type::Mat
-            {
-                public:
-                   const T& element(Index i, Index j)
-                    {
-
-                    }
-                    void set(Index i, Index j, const T& v)
-                    {
-                        (*this)[i][j] = v;
-                    }
-                    void add(Index i, Index j, const T& v)
-                    {
-
-                    }
-                    
-            }
+        /// Petit test/variante pour apprendre : ici le but est de créer une classe qui calculera automatiquement la taille de la bande
+        
+            
             
 
     };

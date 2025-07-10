@@ -7,10 +7,16 @@ find_package(Sofa.Core REQUIRED)
 set(HEADER_FILES
     src/BandMatrix/config.h.in
     src/BandMatrix/init.h
+    src/BandMatrix/BandMatrix.h
+    src/BandMatrix/BandMatrix.inl
+    
+
 )
 
 set(SOURCE_FILES
     src/BandMatrix/init.cpp
+    src/BandMatrix/BandMatrix.cpp
+    
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})

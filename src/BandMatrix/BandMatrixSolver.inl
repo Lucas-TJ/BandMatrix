@@ -19,10 +19,58 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define SOFA_LINEARALGEBRA_BANDMATRIX_CPP
-#include <BandMatrix/BandMatrix.inl>
+#pragma once
+#include <BandMatrixSolver.h>
+#include <sofa/core/visual/VisualParams.h>
+#include <sofa/linearalgebra/SparseMatrix.h>
+#include <BandMatrix.h>
+#include <sofa/core/ObjectFactory.h>
+#include <iostream>
+#include <sofa/helper/system/thread/CTime.h>
+#include <sofa/core/objectmodel/BaseContext.h>
+#include <sofa/core/behavior/LinearSolver.h>
+#include <cmath>
 
-namespace sofa::linearalgebra
+namespace sofa::component::linearsolver::direct
 {
-template class SOFA_LINEARALGEBRA_API linearalgebra::BandMatrix<SReal>;
+
+template<class TMatrix, class TVector>
+BandMatrixSolver<TMatrix,TVector>::BandMatrixSolver()
+{
 }
+
+
+
+template<class TMatrix, class TVector>
+void BandMatrixSolver<TMatrix,TVector>::computeLU(Matrix& M)
+{
+    Index mu;
+    Index ml;
+    getBandLU(mu,ml);
+    Index mv ;
+    mv = mu + ml ; /// mu et ml sont determinés dans BandMatrix.inl avec la fonction getBandLU
+    for (Index j = mu + 2; std::min(mv,N))
+    {
+        for (Index i = mv- j + 2; ml)
+        {
+
+        }
+    }
+
+    for (Index )
+    
+}
+
+template<class TMatrix, class TVector>
+void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& /*M*/, Vector& z, Vector& r)
+{
+    this->mat
+}
+
+template<class TMatrix, class TVector>
+void BandMatrixSolver<TMatrix,TVector>::invert(Matrix& M)
+{
+    
+}
+
+} //namespace sofa::component::linearsolver::direct

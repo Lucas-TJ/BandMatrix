@@ -19,10 +19,23 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define SOFA_LINEARALGEBRA_BANDMATRIX_CPP
-#include <BandMatrix/BandMatrix.inl>
+#define SOFA_COMPONENT_LINEARSOLVER_BTDLINEARSOLVER_CPP
 
-namespace sofa::linearalgebra
+#include <sofa/component/linearsolver/direct/BTDLinearSolver.inl>
+#include <sofa/core/ObjectFactory.h>
+#include <BandMatrix.inl>
+#include <sofa/component/linearsolver/iterative/MatrixLinearSolver.inl>
+
+
+namespace sofa::component::linearsolver::direct
 {
-template class SOFA_LINEARALGEBRA_API linearalgebra::BandMatrix<SReal>;
+
+void registerBTDLinearSolver(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Linear system solver using Thomas Algorithm for Block Tridiagonal matrices.")
+        .add< BTDLinearSolver<linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> > >(true));
 }
+
+template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API BTDLinearSolver< linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> >;
+
+} //namespace sofa::component::linearsolver::direct
