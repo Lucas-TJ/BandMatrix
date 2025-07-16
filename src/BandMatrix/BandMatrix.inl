@@ -29,7 +29,7 @@ namespace sofa::linearalgebra
 
     template<typename T>
     BandMatrix<T>::BandMatrix()
-        : data(), nbRow(0), nbCol(0), bandwidth(1)
+        : data(), nbRow(0), nbCol(0), bandwidth(0)
     {
     }
 
@@ -48,7 +48,8 @@ namespace sofa::linearalgebra
         data.resize(bandwidth);
         for (Index i = 0; i < bandwidth; ++i)
         {
-            data[i].resize(nbCol);
+            data[i].resize(nbCol, 0);
+            /// data[i].assign(nbCol, 0);
         }
         
     }
@@ -56,7 +57,7 @@ namespace sofa::linearalgebra
     template<typename T>
     void BandMatrix<T>::insideBand(Index i, Index j, int banded_i)
     {     
-        if (( banded_i < 0 ) || (banded_i > bandwidth))
+        if (( banded_i < 0 ) || (banded_i >= bandwidth) )
         {
             Index ki; 
             const int oldbandwidth = bandwidth;
@@ -75,25 +76,32 @@ namespace sofa::linearalgebra
             for (ki = 0; ki < nbAdd; ki++)
             {
                 data[ki].clear();
+                data[ki].resize(nbCol);
+                
             }
 
-            banded_i = getBandIndex(bandwidth, i,j); 
+            
         }
     }
 
     template<typename T>
     void BandMatrix<T>::add(Index i, Index j, double v)
     {
-        int banded_i = getBandIndex(bandwidth, i,j);
+        int banded_i = getBandIndex(i,j,bandwidth);
+        ///std::cout << "Before insideBand: i=" << i << " j=" << j << " bandwidth=" << bandwidth << " banded_i=" << banded_i << std::endl;
         insideBand(i,j,banded_i);
+        ///std::cout << "After insideBand: i=" << i << " j=" << j << " bandwidth=" << bandwidth << std::endl;
+        banded_i = getBandIndex(i,j,bandwidth);
+        ///std::cout << "After recompute: banded_i=" << banded_i << std::endl;
         data[banded_i][j] += v;
+        ///std::cout << "===============> data[b_i][j] += v, banded_i =  " << banded_i << ", j= " << j << ", v = " << v << std::endl;
         
     } 
 
     template<typename T>
     SReal BandMatrix<T>::element(Index i, Index j) const
     {
-        Index banded_i = getBandIndex(bandwidth, i,j);
+        Index banded_i = getBandIndex(i,j,bandwidth);
         if (( banded_i >= 0 ) && (banded_i < bandwidth)) return data[banded_i][j];
         else return 0;
             
@@ -108,7 +116,7 @@ namespace sofa::linearalgebra
     template<typename T>
     void BandMatrix<T>::set(Index i, Index j, double v)
     {
-        int banded_i = getBandIndex(bandwidth, i,j);
+        Index banded_i = getBandIndex(i,j,bandwidth);
         insideBand(i,j,banded_i);
         data[banded_i][j] = v;
         
@@ -139,6 +147,7 @@ namespace sofa::linearalgebra
         for (auto& d : data)
             for (auto& e : d)
                 e = 0;
+            
     }
     
 
