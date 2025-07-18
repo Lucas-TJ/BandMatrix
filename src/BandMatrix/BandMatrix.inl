@@ -20,7 +20,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #pragma once
-#include <sofa/linearalgebra/config.h>
+#include <BandMatrix/config.h>
 #include <sofa/type/Mat.h>
 #include <BandMatrix/BandMatrix.h>
 
@@ -102,7 +102,7 @@ namespace sofa::linearalgebra
     SReal BandMatrix<T>::element(Index i, Index j) const
     {
         Index banded_i = getBandIndex(i,j,bandwidth);
-        if (( banded_i >= 0 ) && (banded_i < bandwidth)) return data[banded_i][j];
+        if (( banded_i >= 0 ) && (banded_i < bandwidth)) return (SReal)data[banded_i][j];
         else return 0;
             
     }
@@ -122,9 +122,35 @@ namespace sofa::linearalgebra
         
     } 
 
+    template<typename T>
+    typename BandMatrix<T>::Vector BandMatrix<T>::getVector(Index i, Index j)
+    {
+        Vector dataVec;
+        dataVec.resize(nbRow);
+        for (Index ki = i; ki<nbRow;i++)
+        {
 
+            dataVec[ki] = this->element(ki,j);
+        }
 
-    
+        return dataVec;
+    }
+
+    template<typename T>
+    typename BandMatrix<T>::Matrix BandMatrix<T>::getMatrix()
+    {
+        int rows = rowSize();
+        int cols = colSize();
+        for(Index j = 0; j < cols; j++)
+        {
+            for(Index i = 0; i < rows; i++)
+            {
+                matrix[i + j * rows]=data[i][j];
+            }
+        }
+        return matrix;
+    }
+
     template<typename T>
     typename BandMatrix<T>::Index BandMatrix<T>::rowSize() const
     {

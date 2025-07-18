@@ -19,23 +19,31 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define SOFA_COMPONENT_LINEARSOLVER_BTDLINEARSOLVER_CPP
+///#define SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP
+#define BANDMATRIX_BANDMATRIXSOLVER_CPP
 
-#include <sofa/component/linearsolver/direct/BTDLinearSolver.inl>
+#include <BandMatrix/BandMatrixSolver.inl>
+
 #include <sofa/core/ObjectFactory.h>
-#include <BandMatrix.inl>
-#include <sofa/component/linearsolver/iterative/MatrixLinearSolver.inl>
+
+#include <BandMatrix/BandMatrix.inl>
+#include <sofa/linearalgebra/FullVector.h>
 
 
 namespace sofa::component::linearsolver::direct
 {
 
-void registerBTDLinearSolver(sofa::core::ObjectFactory* factory)
+using namespace sofa::defaulttype;
+using namespace sofa::linearalgebra;
+
+void registerBandMatrixSolver(sofa::core::ObjectFactory* factory)
 {
-    factory->registerObjects(core::ObjectRegistrationData("Linear system solver using Thomas Algorithm for Block Tridiagonal matrices.")
-        .add< BTDLinearSolver<linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> > >(true));
+    factory->registerObjects(core::ObjectRegistrationData("Linear system solver using Gaussian elimination for general banded matrices.")
+        .add< BandMatrixSolver<linearalgebra::BandMatrix<SReal>, linearalgebra::FullVector<SReal> > >())
+        ;
 }
 
-template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API BTDLinearSolver< linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> >;
+template class BANDMATRIX_API BandMatrixSolver< linearalgebra::BandMatrix<SReal>, linearalgebra::FullVector<SReal> >;
 
 } //namespace sofa::component::linearsolver::direct
+

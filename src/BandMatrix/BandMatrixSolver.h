@@ -20,53 +20,86 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #pragma once
-#include <sofa/component/linearsolver/direct/config.h>
-
+#include <BandMatrix/config.h>
+///#include <sofa/component/linearsolver/direct/config.h>
 #include <sofa/core/behavior/LinearSolver.h>
 #include <sofa/component/linearsolver/iterative/MatrixLinearSolver.h>
 #include <sofa/simulation/MechanicalVisitor.h>
 #include <sofa/linearalgebra/SparseMatrix.h>
+#include <BandMatrix/BandMatrix.h>
 #include <sofa/linearalgebra/FullMatrix.h>
-#include <BandMatrix.h>
-#include <sofa/helper/map.h>
-
 #include <cmath>
+#include <sofa/type/Mat.h>
+#include <sofa/type/vector.h>
+
+
 
 namespace sofa::component::linearsolver::direct
 {
+/// Linear system solver using Gaussian elimination for Banded matrices
 
-/// Direct linear solver for banded matrices
 template<class TMatrix, class TVector>
 class BandMatrixSolver : public sofa::component::linearsolver::MatrixLinearSolver<TMatrix,TVector>
 {
 public:
-    SOFA_CLASS(SOFA_TEMPLATE2(BandMatrixSolver,TMatrix,TVector),SOFA_TEMPLATE2(sofa::component::linearsolver::MatrixLinearSolver,TMatrix,TVector));
+    SOFA_CLASS(SOFA_TEMPLATE2(BandMatrixSolver,TMatrix,TVector), SOFA_TEMPLATE2(sofa::component::linearsolver::MatrixLinearSolver, TMatrix, TVector));
 
     typedef TMatrix Matrix;
     typedef TVector Vector;
     typedef typename Vector::Real Real;
     typedef sofa::component::linearsolver::MatrixLinearSolver<TMatrix,TVector> Inherit;
 
+    typedef typename linearalgebra::BaseMatrix::Index Index;
+
     BandMatrixSolver();
 
-    /// Computes an LU factorization (DGBTF2)
-    void computeLU(Matrix& M) override;
+    ///typename Matrix::InvMatrixType Minv;  
 
-    /// Compute x such as Mx=b. M is not used, it must have been factored before using method invert(Matrix& M)
-    /// Correspond à DGBTRS pour l'instant
-    void solve (Matrix& M, Vector& x, Vector& b) override;
+    ////////////////////////////
 
-    /// Factors the matrix. Must be done before solving
+
+    Vector Y;
+protected:
+    
+
+    Index incx;
+    Vector dx;
+    Matrix ab;
+    Matrix a;
+    Vector x;
+    Vector y;
+
+    
+public:
+
+    
+
     void invert(Matrix& M) override;
 
-private :
-    linearalgebra::BandMatrix<typename Vector::Real> L;
+    /// Solve Mx=b
+    void solve (Matrix& /*M*/, Vector& x, Vector& b) override;
+
+    /// Multiply the inverse of the system matrix by the transpose of the given matrix, and multiply the result with the given matrix J
+    ///
+    /// @param result the variable where the result will be added
+    /// @param J the matrix J to use
+    /// @return false if the solver does not support this operation, of it the system matrix is not invertible
+    bool addJMInvJt(linearalgebra::BaseMatrix* result, linearalgebra::BaseMatrix* J, SReal fact) override;
+
+    Index idamax(Index n, Vector dx, Index incx);
+
+    void dger(Index m, Index n, double alpha, Vector x, Index incx, Vector y, Index incy, Matrix a, Index lda);
+
+    void dswap(Index n, Vector x, Index incx, Vector y, Index incy);
+
+    void dscal(Index n, SReal a, Vector x, Index incx);
+
+    void dgbtf2(Index m, Index n, Index kl, Index ku, Matrix& ab, Index ldab, Vector& ipiv);
+    
+
 };
 
 #if !defined(SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP)
-extern template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API BandMatrixSolver< linearalgebra::SparseMatrix<SReal>, linearalgebra::FullVector<SReal> >;
-extern template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API BandMatrixSolver< linearalgebra::FullMatrix<SReal>, linearalgebra::FullVector<SReal> >;
-extern template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API BandMatrixSolver< linearalgebra::BandMatrix<SReal>, linearalgebra::BandMatrix<SReal> >;
+extern template class BANDMATRIX_API BandMatrixSolver< linearalgebra::BandMatrix<SReal>, linearalgebra::FullVector<SReal> >;
 #endif
-
 } //namespace sofa::component::linearsolver::direct

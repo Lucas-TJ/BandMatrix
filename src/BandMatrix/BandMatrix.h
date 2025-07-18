@@ -20,7 +20,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #pragma once
-#include <sofa/linearalgebra/config.h>
+#include <BandMatrix/config.h>
 #include <sofa/type/Mat.h>
 #include <sofa/linearalgebra/BaseMatrix.h>
 #include <sofa/linearalgebra/BlockFullMatrix.h>
@@ -41,6 +41,8 @@ namespace sofa::linearalgebra
         public:
             enum { category = MATRIX_BAND };
             typedef T Real;
+            typedef FullVector<Real> Vector;
+            typedef BandMatrix<T> Matrix;
             typedef typename linearalgebra::BaseMatrix::Index Index;
             ///typedef typename sofa::type::vector vector;
             
@@ -48,7 +50,8 @@ namespace sofa::linearalgebra
 
         protected:
             sofa::type::vector<sofa::type::vector<T>> data;
-            SReal* StoredData;
+            Matrix matrix;
+            
             Index nbRow, nbCol;
             Index bandwidth;
             Index getBandIndex(Index i, Index j, int bandwidth) const;
@@ -73,6 +76,10 @@ namespace sofa::linearalgebra
             void add(Index i, Index j, double v) override;
 
             void clear() override;
+            
+            Vector getVector(Index i, Index j);
+
+            Matrix getMatrix();
             
 
            
