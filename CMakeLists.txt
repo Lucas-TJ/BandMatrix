@@ -10,13 +10,13 @@ find_package(Sofa.Component.LinearSolver.Ordering REQUIRED)
 find_package(Sofa.Component.LinearSolver.Direct REQUIRED)
 
 set(HEADER_FILES
-    src/BandMatrix/config.h.in
+    src/BandMatrix/config.h
     src/BandMatrix/init.h
     src/BandMatrix/BandMatrix.h
     src/BandMatrix/BandMatrix.inl
     src/BandMatrix/BandMatrixSolver.h
     src/BandMatrix/BandMatrixSolver.inl
-    
+    src/BandMatrix/MatrixLinearSystem[BandMatrix].h
 
 )
 
@@ -24,6 +24,7 @@ set(SOURCE_FILES
     src/BandMatrix/init.cpp
     src/BandMatrix/BandMatrix.cpp
     src/BandMatrix/BandMatrixSolver.cpp
+    src/BandMatrix/MatrixLinearSystem[BandMatrix].cpp
     
 )
 

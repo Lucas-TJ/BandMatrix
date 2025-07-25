@@ -22,11 +22,13 @@
 ///#define SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP
 #define BANDMATRIX_BANDMATRIXSOLVER_CPP
 
+#include <BandMatrix/config.h>
 #include <BandMatrix/BandMatrixSolver.inl>
-
+#include <BandMatrix/BandMatrixSolver.h>
 #include <sofa/core/ObjectFactory.h>
-
+#include <sofa/component/linearsolver/iterative/MatrixLinearSolver.inl>
 #include <BandMatrix/BandMatrix.inl>
+#include <BandMatrix/BandMatrix.h>
 #include <sofa/linearalgebra/FullVector.h>
 
 
@@ -38,7 +40,7 @@ using namespace sofa::linearalgebra;
 
 void registerBandMatrixSolver(sofa::core::ObjectFactory* factory)
 {
-    factory->registerObjects(core::ObjectRegistrationData("Linear system solver using Gaussian elimination for general banded matrices.")
+    factory->registerObjects(sofa::core::ObjectRegistrationData("Linear system solver using Gaussian elimination for general banded matrices.")
         .add< BandMatrixSolver<linearalgebra::BandMatrix<SReal>, linearalgebra::FullVector<SReal> > >())
         ;
 }

@@ -33,6 +33,7 @@
 namespace sofa::linearalgebra
 {
     using sofa::type::vector;
+    using namespace sofa::linearalgebra;
     /// Simple banded matrix container
     template<typename T>
     class BandMatrix : public linearalgebra::BaseMatrix
@@ -42,15 +43,15 @@ namespace sofa::linearalgebra
             enum { category = MATRIX_BAND };
             typedef T Real;
             typedef FullVector<Real> Vector;
-            typedef BandMatrix<T> Matrix;
-            typedef typename linearalgebra::BaseMatrix::Index Index;
+            ///typedef BandMatrix<T> Matrix;
+            using linearalgebra::BaseMatrix::Index;
             ///typedef typename sofa::type::vector vector;
             
 
 
         protected:
             sofa::type::vector<sofa::type::vector<T>> data;
-            Matrix matrix;
+            ///Matrix matrix;
             
             Index nbRow, nbCol;
             Index bandwidth;
@@ -79,20 +80,16 @@ namespace sofa::linearalgebra
             
             Vector getVector(Index i, Index j);
 
-            Matrix getMatrix();
-            
-
-           
-            
-            
-
-
-        /// Petit test/variante pour apprendre : ici le but est de créer une classe qui calculera automatiquement la taille de la bande
-        
-            
-            
+            static const char* Name()
+            {
+                static std::string name { "BandMatrix" };
+                return name.c_str();
+            }
 
     };
 
+#if !defined(BANDMATRIX_CPP)
+extern template class BANDMATRIX_API linearalgebra::BandMatrix<SReal>;
+#endif
 
 }

@@ -49,7 +49,6 @@ namespace sofa::linearalgebra
         for (Index i = 0; i < bandwidth; ++i)
         {
             data[i].resize(nbCol, 0);
-            /// data[i].assign(nbCol, 0);
         }
         
     }
@@ -88,14 +87,9 @@ namespace sofa::linearalgebra
     void BandMatrix<T>::add(Index i, Index j, double v)
     {
         int banded_i = getBandIndex(i,j,bandwidth);
-        ///std::cout << "Before insideBand: i=" << i << " j=" << j << " bandwidth=" << bandwidth << " banded_i=" << banded_i << std::endl;
         insideBand(i,j,banded_i);
-        ///std::cout << "After insideBand: i=" << i << " j=" << j << " bandwidth=" << bandwidth << std::endl;
         banded_i = getBandIndex(i,j,bandwidth);
-        ///std::cout << "After recompute: banded_i=" << banded_i << std::endl;
         data[banded_i][j] += v;
-        ///std::cout << "===============> data[b_i][j] += v, banded_i =  " << banded_i << ", j= " << j << ", v = " << v << std::endl;
-        
     } 
 
     template<typename T>
@@ -118,6 +112,7 @@ namespace sofa::linearalgebra
     {
         Index banded_i = getBandIndex(i,j,bandwidth);
         insideBand(i,j,banded_i);
+        banded_i = getBandIndex(i,j,bandwidth);
         data[banded_i][j] = v;
         
     } 
@@ -127,29 +122,16 @@ namespace sofa::linearalgebra
     {
         Vector dataVec;
         dataVec.resize(nbRow);
-        for (Index ki = i; ki<nbRow;i++)
+        for (Index ki = i; ki<nbRow;ki++)
         {
 
             dataVec[ki] = this->element(ki,j);
+            
         }
 
         return dataVec;
     }
 
-    template<typename T>
-    typename BandMatrix<T>::Matrix BandMatrix<T>::getMatrix()
-    {
-        int rows = rowSize();
-        int cols = colSize();
-        for(Index j = 0; j < cols; j++)
-        {
-            for(Index i = 0; i < rows; i++)
-            {
-                matrix[i + j * rows]=data[i][j];
-            }
-        }
-        return matrix;
-    }
 
     template<typename T>
     typename BandMatrix<T>::Index BandMatrix<T>::rowSize() const

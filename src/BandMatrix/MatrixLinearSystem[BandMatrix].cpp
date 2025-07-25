@@ -19,14 +19,22 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-///#define SOFA_LINEARALGEBRA_BANDMATRIX_CPP
-#define BANDMATRIX_BANDMATRIX_CPP
-#include <BandMatrix/BandMatrix.inl>
+#define SOFA_COMPONENT_LINEARSOLVER_MATRIXLINEARSYSTEM_BANDMATRIX_CPP
+#include <BandMatrix/MatrixLinearSystem[BandMatrix].h>
+#include <sofa/component/linearsystem/MatrixLinearSystem.inl>
 
-namespace sofa::linearalgebra
+#include <sofa/core/ObjectFactory.h>
+
+namespace sofa::component::linearsystem
 {
-template class SOFA_LINEARALGEBRA_API linearalgebra::BandMatrix<SReal>;
 
-///template class BANDMATRIX_API linearalgebra::BandMatrix<SReal>;
+///template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API MatrixLinearSystem< linearalgebra::BandMatrix<SReal>,  linearalgebra::FullVector<SReal> >;
+template class BANDMATRIX_API MatrixLinearSystem< linearalgebra::BandMatrix<SReal>,  linearalgebra::FullVector<SReal> >;
+
+void registerMatrixLinearSystemBandMatrix(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Linear system dedicated to a Banded matrix.")
+        .add<MatrixLinearSystem< linearalgebra::BandMatrix<SReal>,  linearalgebra::FullVector<SReal> > >());
+}
 
 }

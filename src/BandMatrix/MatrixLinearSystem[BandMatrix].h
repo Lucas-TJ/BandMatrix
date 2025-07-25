@@ -19,14 +19,18 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-///#define SOFA_LINEARALGEBRA_BANDMATRIX_CPP
-#define BANDMATRIX_BANDMATRIX_CPP
-#include <BandMatrix/BandMatrix.inl>
+#pragma once
+///#include <sofa/component/linearsolver/direct/config.h>
+#include <BandMatrix/config.h>
+#include <sofa/component/linearsystem/MatrixLinearSystem.h>
+#include <BandMatrix/BandMatrix.h>
+#include <sofa/linearalgebra/FullVector.h>
 
-namespace sofa::linearalgebra
+#if !defined(SOFA_COMPONENT_LINEARSOLVER_MATRIXLINEARSYSTEM_BANDMATRIX_CPP)
+namespace sofa::component::linearsystem
 {
-template class SOFA_LINEARALGEBRA_API linearalgebra::BandMatrix<SReal>;
-
-///template class BANDMATRIX_API linearalgebra::BandMatrix<SReal>;
+///extern template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API MatrixLinearSystem< linearalgebra::BandMatrix<SReal>,  linearalgebra::FullVector<SReal> >;
+extern template class BANDMATRIX_API MatrixLinearSystem< linearalgebra::BandMatrix<SReal>,  linearalgebra::FullVector<SReal> >;
 
 }
+#endif

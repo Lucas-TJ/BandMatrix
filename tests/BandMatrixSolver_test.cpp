@@ -19,14 +19,34 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-///#define SOFA_LINEARALGEBRA_BANDMATRIX_CPP
-#define BANDMATRIX_BANDMATRIX_CPP
-#include <BandMatrix/BandMatrix.inl>
+///#include <Sofa.LinearAlgebra.Testing/BaseMatrix_test.h>
+#include <BandMatrix/tests/BandMatrixSolver_test.h>
+#include <BandMatrix/BandMatrixSolver.h>
 
-namespace sofa::linearalgebra
+
+
+namespace sofa
 {
-template class SOFA_LINEARALGEBRA_API linearalgebra::BandMatrix<SReal>;
+using namespace testing;
 
-///template class BANDMATRIX_API linearalgebra::BandMatrix<SReal>;
+
+
+template<sofa::Index TNbRows, sofa::Index TNbCols, class TReal >
+using TestBandMatrixTypes = ::testing::Types<
+    TestBaseMatrixTraits< linearalgebra::BandMatrix<TReal>, TNbRows, TNbCols, TReal>
+>;
+
+template<class TReal>
+using TestBandMatrix9x9Types = TestBandMatrixTypes<9,9,TReal>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+    SofaBandLinearSolver_test_indexmax,
+    TestBaseMatrix,
+    TestBandMatrix9x9Types<double>
+);
 
 }
+
+
+
+
