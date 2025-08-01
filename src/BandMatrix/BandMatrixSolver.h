@@ -27,6 +27,7 @@
 #include <sofa/simulation/MechanicalVisitor.h>
 #include <sofa/linearalgebra/SparseMatrix.h>
 #include <BandMatrix/BandMatrix.h>
+
 #include <sofa/linearalgebra/FullMatrix.h>
 #include <cmath>
 #include <sofa/type/Mat.h>
@@ -54,6 +55,8 @@ public:
     typedef typename linearalgebra::BaseMatrix::Index Index;
 
     BandMatrixSolver();
+
+    void reset() override {}
 
     ///typename Matrix::InvMatrixType Minv;  
 
@@ -88,7 +91,7 @@ public:
     /// @param increment storage spacing between elements of dx
     /// @return The index max of the vector
     Index indexMax(Index nbElem, const Vector& dx, Index increment);
-    Index indexMax2(Index nbElem, const Matrix& M, Index increment, Index currentColumn, Index indexDiagP);
+    static Index indexMax2(Index nbElem, const Matrix& M, Index increment, Index currentColumn, Index indexDiagP);
 
     
     /// @brief This function performs the rank 1 operation.
@@ -102,7 +105,8 @@ public:
     /// @param y vector y
     /// @param incrementY increment of y 
     /// @param updatedMatrix Matrix which we want to update
-    void rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Vector x, Index incrementX, Vector y, Index incrementY, Matrix& updatedMatrix);
+    static void rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Vector x, Index incrementX, Vector y, Index incrementY, Matrix& updatedMatrix);
+    static void rank1MatrixUpdate2(Index nbRows, Index nbCols, Real alpha,  Matrix& matrix, Index rowOfM1, Index colOfM1 ,Index incrementX, Index rowOfM2, Index colOfM2, Index incrementY, Matrix& updatedMatrix);
 
     void swapVector(Index n, Vector x, Index incx, Vector y, Index incy);
 
@@ -114,7 +118,7 @@ public:
     /// @param incrementM1 
     /// @param indexOfM2 
     /// @param incrementM2 
-    void swapVector2(Index nbElemToSwap, Matrix& M, Index currentColumn, Index indexOfM1, Index incrementM1, Index indexOfM2, Index incrementM2 );
+    static void swapVector2(Index nbElemToSwap, Matrix& M, Index currentColumn, Index indexOfM1, Index incrementM1, Index indexOfM2, Index incrementM2 );
 
     /// @brief Scales a vector by a constant
     /// @param n number of elements in input vector
@@ -128,8 +132,9 @@ public:
     /// @param M matrix which we want to scale at column currentColumn
     /// @param incx storage spacing between elements of x
     /// @param currentColumn is the current column where we want to scale
-    void scaleVector2(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn);
+    static void scaleVector2(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP);
 
+    static void scaleVector3(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP); 
 
     /// @brief This function computes an LU factorization of a real band matrix using partial pivoting with row interchanges
     /// @param nbRows the number of rows
@@ -140,7 +145,7 @@ public:
     /// and the multipliers used during the factorization are stored below
     /// @param dimLUMatrix the dimension of LUFactorizedMatrix
     /// @param indexPivot the pivot indices
-    void computeLUBandMatrix(Index nbRows, Index nbCols, Index nbSubDiag, Index nbSupDiag, Matrix& LUFactorizedMatrix, Index dimLUMatrix, Vector& indexPivot);
+    static void computeLUBandMatrix(Index nbRows, Index nbCols, Index nbSubDiag, Index nbSupDiag, Matrix& LUFactorizedMatrix, Index dimLUMatrix, Vector& indexPivot);
     
 
     /// @brief This function solves the system of equations A*x=B. Where b and x are n elements vectors and A is as n by n band matrix with k+1 diagonals

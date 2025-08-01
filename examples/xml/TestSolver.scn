@@ -30,7 +30,7 @@
         <EulerImplicitSolver name="odesolver" printLog="false"  rayleighStiffness="0.1" rayleighMass="0.1" />
         <BandMatrixSolver template="BandMatrix" iterations="25" tolerance="1e-5" threshold="1e-5"/>
         
-        <GlobalSystemMatrixExporter exportEveryNumberOfSteps="1" filename="screenshots/BandMatrixTestSolver/global_matrix_band" printLog="true" format="jpg"/>
+        <GlobalSystemMatrixExporter exportEveryNumberOfSteps="1" filename="screenshots/BandMatrixTestSolver/global_matrix_band" printLog="false" format="jpg"/>
         <MechanicalObject />
         <UniformMass vertexMass="1"/>
         <RegularGridTopology nx="4" ny="4" nz="10" xmin="-6" xmax="-3" ymin="0" ymax="3" zmin="0" zmax="9" />

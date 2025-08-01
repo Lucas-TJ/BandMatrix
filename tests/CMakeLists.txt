@@ -8,7 +8,8 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
     test.cpp
-    BandMatrix_test.cpp
+    #BandMatrix_test.cpp
+    BandMatrixSolver_test.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

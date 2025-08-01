@@ -44,14 +44,28 @@ BandMatrixSolver<TMatrix,TVector>::BandMatrixSolver()
 template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::invert(Matrix& M)
 {   
-    Index nbRows = M.rowSize();
-    Index nbCols = M.colSize();
+    LUFactorizedMatrix = M;
+    std::cout << "Matrix LU Avant = " << LUFactorizedMatrix << std::endl;
+    Index nbRows = LUFactorizedMatrix.rowSize();
+    Index nbCols = LUFactorizedMatrix.colSize();
     Index nbSubDiag = nbCols / 2;
     Index nbSupDiag = nbCols / 2;
     Index dimLUMatrix = nbCols ;
     
     indexPivot.resize(std::min(nbRows,nbCols));
-    computeLUBandMatrix(nbRows, nbCols, nbSubDiag, nbSupDiag, M, dimLUMatrix, indexPivot);
+    this->computeLUBandMatrix(nbRows-1, nbCols-1, nbSubDiag, nbSupDiag, LUFactorizedMatrix, dimLUMatrix-1, indexPivot);
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "_____________________________________________________________________"<< std::endl;
+    std::cout << "Matrix LU Après = " << LUFactorizedMatrix << std::endl;
 }
 
 
@@ -59,13 +73,14 @@ void BandMatrixSolver<TMatrix,TVector>::invert(Matrix& M)
 
 /// This function will call every methods from LAPACK to solve the system
 template<class TMatrix, class TVector>
-void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& M, Vector& x, Vector& b)
+void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& /*M*/, Vector& x, Vector& b)
 {
 
-    Index nbSubDiag = M.colSize() / 2;
-    Index nbSupDiag = M.colSize() / 2;
+
+    Index nbSubDiag = LUFactorizedMatrix.colSize() / 2;
+    Index nbSupDiag = LUFactorizedMatrix.colSize() / 2;
     
-    Index matrixOrder = M.rowSize();
+    Index matrixOrder = LUFactorizedMatrix.rowSize();
     Index nbColumnB = 1;
     Index dimB = b.size();
 
@@ -77,7 +92,7 @@ void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& M, Vector& x, Vector& b)
     
 
 
-    solveAxB(matrixOrder, nbSubDiag,nbSupDiag, nbColumnB, M, indexPivot, B, dimB);
+    solveAxB(matrixOrder, nbSubDiag,nbSupDiag, nbColumnB, LUFactorizedMatrix, indexPivot, B, dimB);
 
 
     for(Index i = 0; i<dimB;i++)
@@ -85,7 +100,7 @@ void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& M, Vector& x, Vector& b)
         x[i] = B.element(i,0); 
     }
     
-    std::cout << "M = " << M.element(0,0) << std::endl;
+    ///std::cout << "M = " << M.element(0,0) << std::endl;
     std::cout << "LUFactor = " << LUFactorizedMatrix.element(0,0) << std::endl;
 
 
@@ -143,7 +158,7 @@ typename BandMatrixSolver<TMatrix,TVector>::Index BandMatrixSolver<TMatrix,TVect
 template<class TMatrix, class TVector>
 typename BandMatrixSolver<TMatrix,TVector>::Index BandMatrixSolver<TMatrix,TVector>::indexMax2(Index nbElem, const Matrix& M, Index increment, Index currentColumn, Index indexDiagP )
 {
-    Index idmax = NULL;
+    Index idmax = 0;
     Index nbRows = M.rowSize();
     if ((nbElem < 1) || (increment <= 0))
     {
@@ -155,27 +170,28 @@ typename BandMatrixSolver<TMatrix,TVector>::Index BandMatrixSolver<TMatrix,TVect
     {
         ///Real dmax = std::abs(M[indexDiagP][currentColumn]);
         Real dmax = std::abs(M.element(indexDiagP,currentColumn));
-        for (Index i = indexDiagP; i < nbRows; i++)
+        for (Index i = indexDiagP; i < indexDiagP + nbElem; i++)
         {
-            if(std::abs(M.element(i,currentColumn) < dmax))
+            if(std::abs(M.element(i,currentColumn) > dmax))
             {
-                idmax = i;
+                idmax = i - indexDiagP;
                 dmax = std::abs(M.element(i,currentColumn));
             }
         }
     }
     else
     {
-        Index ix = 1;
+        Index ix = indexDiagP;
         Real dmax = std::abs(M.element(indexDiagP,currentColumn));
         ix += increment;
-        for (Index i = indexDiagP; i < nbRows; i++)
+        for (Index i = indexDiagP; i < indexDiagP + nbElem; i++)
         {
-            if(std::abs(M.element(indexDiagP,currentColumn)) > dmax)
+            if(std::abs(M.element(ix-1,currentColumn)) > dmax)
             {
                 idmax = i;
-                dmax = std::abs(M.element(i,currentColumn));
+                dmax = std::abs(M.element(ix-1,currentColumn));
             }
+            ix += increment;
         }
     }
     return idmax;
@@ -185,19 +201,19 @@ template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Vector x, Index incrementX, Vector y, Index incrementY, Matrix& updatedMatrix)
 {
     Index ix, jy, kx;
-    double temp;
+    Real temp;
     
-    if(incrementY > 0 ) jy=1;
+    if(incrementY > 0 ) jy=0;
     else jy = 1 - (nbCols - 1)*incrementY;
 
     if(incrementX == 1)
     {
-        for(Index j=1; j<nbCols; j++)
+        for(Index j=0; j<nbCols; j++)
         {
             if(y[jy] != 0 )
             {
                 temp = alpha*y[jy];
-                for(Index i = 1; i<nbRows; i++)
+                for(Index i = 0; i<nbRows; i++)
                 {
                     ///a[i][j] += x[i]*temp;
                     updatedMatrix.add(i,j,x[i]*temp);
@@ -211,13 +227,13 @@ void BandMatrixSolver<TMatrix,TVector>::rank1MatrixUpdate(Index nbRows, Index nb
         if(incrementX > 0) kx = 1;
         else kx = 1 - (nbRows - 1)*incrementX;
 
-        for(Index j = 1; j<nbCols; j++)
+        for(Index j = 0; j<nbCols; j++)
         {
             if(y[jy] != 0 )
             {
                 temp = alpha*y[jy];
                 ix = kx;
-                for(Index i=1; i<nbRows; i++)
+                for(Index i=0; i<nbRows; i++)
                 {
                     ///a[i][j] += x[ix]*temp;
                     updatedMatrix.add(i,j,x[ix]*temp);
@@ -232,6 +248,103 @@ void BandMatrixSolver<TMatrix,TVector>::rank1MatrixUpdate(Index nbRows, Index nb
 }
 
 template<class TMatrix, class TVector>
+void BandMatrixSolver<TMatrix,TVector>::rank1MatrixUpdate2(Index nbRows, Index nbCols, Real alpha, Matrix& M, Index rowOfM1, Index colOfM1 ,Index incrementX, Index rowOfM2, Index colOfM2, Index incrementY, Matrix& updatedMatrix)
+{   // rank1MatrixUpdate(nbSubDiagElements, ju-j, -1, LUFactorizedMatrix.getVector(nbSupDiagU+1,j), 1, LUFactorizedMatrix.getVector(nbSupDiagU-1,j+1), dimLUMatrix-1, LUFactorizedMatrix )
+    // rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Vector x, Index incrementX, Vector y, Index incrementY, Matrix& updatedMatrix)
+
+    Index ix, jy, kx;
+    Real temp;
+    
+    Vector x ;
+    Vector y ;
+
+    x.resize(std::abs(nbRows-rowOfM1));
+    y.resize(std::abs(nbRows-rowOfM2));
+    for(Index i = 0 ; i < nbRows-rowOfM1 ; i++)
+    {
+        x.set(i,M.element(i+rowOfM1,colOfM1));
+        y.set(i,M.element(i+rowOfM2,colOfM2));
+    }
+    
+
+    if(incrementY > 0 ) jy=0;
+    else jy = 1 - (nbCols - 1)*incrementY ;
+
+    if(incrementX == 1)
+    {
+        
+        
+        for(Index j=0; j<nbCols; j++)
+        {
+            
+            //std::cout <<"l 268" <<std::endl;
+            //if(y[jy] != 0 )
+            if( M.element(jy+rowOfM2,colOfM2) != 0)
+            {
+                //std::cout <<"l 275" <<std::endl;
+                
+                //temp = alpha*y[jy];
+                // std::cout <<"jy = " << jy << std::endl;
+                // std::cout <<"y size" << nbRows-rowOfM2<<std::endl;
+                temp = alpha * y.element(jy);
+                // std::cout << "temp = " << temp << std::endl;
+                for(Index i = 0; i<nbRows; i++)
+                {
+                    
+                    // std::cout <<"l 282" <<std::endl;
+                    // ///a[i][j] += x[i]*temp;
+                    // //updatedMatrix.add(i,j,x[i]*temp);
+                    // std::cout << "i =  " <<i<< std::endl;
+                    // std::cout << "j =  " <<j<< std::endl;
+                    // std::cout << "a(i,j) = " << M.element(i,j) << std::endl;
+                    // std::cout << "x[i] = " << M.element(i,colOfM1)<<std::endl;
+                    
+                    //M.add(i,j, M.element(i+rowOfM1,colOfM1) * temp );
+                    M.add(i,j, x.element(i) * temp );
+                    // std::cout << "matrix is " << M << std::endl;
+                    // std::cout <<"l 290" <<std::endl;
+                } 
+            }
+            jy += incrementY;
+        }
+    }
+    else
+    {
+        
+        
+        if(incrementX > 0) kx = 1;
+        else kx = 1 - (nbRows - 1)*incrementX;
+
+        for(Index j = 0; j<nbCols; j++)
+        {   
+            
+            
+            //if(y[jy] != 0 )
+            if(M.element(jy+rowOfM2,colOfM2) != 0)
+            {
+                
+                
+                //temp = alpha*y[jy];
+                temp = alpha * M.element(jy+rowOfM2,colOfM2);
+                ix = kx;
+                for(Index i=0; i<nbRows; i++)
+                {
+                    
+                    
+                    ///a[i][j] += x[ix]*temp;
+                    //updatedMatrix.add(i,j,x[ix]*temp);
+                    updatedMatrix.add(i,j, M.element(ix+rowOfM1,colOfM1) *temp );
+                    ix += incrementX;
+                }
+            }
+            jy += incrementY;
+        }
+    }
+
+}
+
+
+template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Vector x, Index incx, Vector y, Index incy) 
 {
     for (Index i = 0; i < n; ++i) {
@@ -242,18 +355,20 @@ void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Vector x, Index incx
 template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::swapVector2(Index nbElemToSwap, Matrix& M, Index currentColumn, Index indexOfM1, Index incrementM1, Index indexOfM2, Index incrementM2 ) 
 {
-    Index ix = 1;
-    Index iy = 1; 
+    Index ix = 0;
+    Index iy = 0; 
     if(incrementM1 < 0)
     {
         ix = (-nbElemToSwap+1)*incrementM1+1;
         iy = (-nbElemToSwap+1)*incrementM2+1;
     }
-    for(Index i=0; i<nbElemToSwap;i++)
+    Index ns = nbElemToSwap/2;
+    for(Index i=0; i< ns;i++)
     {
         Index dtemp = M.element(indexOfM1+ix,currentColumn);
         M.set(indexOfM1+ix, currentColumn, M.element(indexOfM2+iy,currentColumn));
         M.set(indexOfM2+iy, currentColumn, dtemp);
+        
         ix += incrementM1;
         iy += incrementM2;
     }
@@ -270,13 +385,59 @@ void BandMatrixSolver<TMatrix,TVector>::scaleVector(Index n, SReal a, Vector x, 
 }
 
 template<class TMatrix, class TVector>
-void BandMatrixSolver<TMatrix,TVector>::scaleVector2(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn) 
+void BandMatrixSolver<TMatrix,TVector>::scaleVector2(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP) 
 {
+
     if (nbElem <= 0 || incx <= 0) return;
-    for (Index i = 0; i < nbElem; ++i) {
+    for (Index i = indexDiagP; i < nbElem+indexDiagP; ++i) {
         ///x[i * incx] *= a;
-        M.add(i*incx, currentColumn, M.element(i*incx, currentColumn)*a);
+        M.set(i*incx, currentColumn, M.element(i*incx, currentColumn)*a);
     }
+}
+
+template<class TMatrix, class TVector>
+void BandMatrixSolver<TMatrix,TVector>::scaleVector3(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP) 
+{
+
+
+    // Index m;
+    // if(incx == 1)
+    // {
+    //     std::cout<<"IF"<<std::endl;
+    //     m = nbElem%5;
+    //     if(m =!0)
+    //     {
+    //         std::cout <<"IF - IF" << std::endl;
+    //         for(Index i = indexDiagP; i - indexDiagP < m; i++)
+    //         {
+    //             std::cout <<"IF - IF - For" << std::endl;
+    //             M.set(i,currentColumn, a*M.element(i,currentColumn));
+    //         }
+    //         //if(nbElem < 5) return;
+    //     }
+    //     Index mp1 = m+5;
+    //     Index nincx = nbElem*incx;
+    //     for(Index i= indexDiagP; i-indexDiagP< nincx ; i += incx)
+    //     {
+    //         std::cout <<"IF - FOR" << std::endl;
+    //         std::cout << "i = " << i<< std::endl;
+    //         std::cout << "M[] = " << M.element(i,currentColumn)<<std::endl;
+    //         M.set(i,currentColumn, a*M.element(i,currentColumn));
+            
+    //     }
+    // }
+    // else
+    
+        // std::cout<<"ELSE"<<std::endl;
+        Index nincx = nbElem*incx;
+        for(Index i=indexDiagP ; i - indexDiagP < nincx; i += incx)
+        {
+            // std::cout << "i = " << i<< std::endl;
+            // std::cout << "M[] = " << M.element(i,currentColumn)<<std::endl;
+            M.set(i,currentColumn, a*M.element(i,currentColumn));
+        }
+    
+    
 }
 
 template<class TMatrix, class TVector>
@@ -284,85 +445,107 @@ void BandMatrixSolver<TMatrix,TVector>::computeLUBandMatrix(Index nbRows, Index 
 {
     Index ju;
 
-    Index nbSupDiagU = nbSupDiag + nbSubDiag;
+    Index nbSupDiagU = nbSupDiag + nbSubDiag ;
 
-    for (Index j= nbSupDiag ; j <= std::min(nbSupDiagU,nbCols); j++)    /// Set fill-in elements in columns KU+2 to KV to zero
+    std::cout << LUFactorizedMatrix << std::endl;
+
+    // obliger de resize
+    Index oldbandwidth = nbSupDiag + nbSubDiag + 1;
+    Index newbandwidth = nbSupDiagU + 1 + nbSubDiag;
+    Index nbAdd = (newbandwidth - oldbandwidth) /2 ;
+    LUFactorizedMatrix.resize(newbandwidth,nbCols);
+    for(Index i = oldbandwidth-1; i>-1;i--)
     {
-        for (Index i= nbSupDiagU - j ; i<=nbSubDiag;i++)
+        for(Index j = 0; j<nbCols;j++)
         {
+            LUFactorizedMatrix.set(i+nbAdd*2,j,LUFactorizedMatrix.element(i,j));
             LUFactorizedMatrix.set(i,j,0);
         }
     }
+    //fin du resize
+
+    std::cout << LUFactorizedMatrix << std::endl;
+    // for (Index j= nbSupDiag + 1 ; j < std::min(nbSupDiagU,nbCols); j++)    /// Set fill-in elements in columns KU+2 to KV to zero
+    // {
+    //     for (Index i= nbSupDiagU - j + 1; i< nbSubDiag;i++)
+    //     {
+    //         std::cout << "i = " << i<<std::endl;
+    //         std::cout<<"j = "<<j<<std::endl;
+    //         std::cout<<"TEST "<<std::endl;
+    //         LUFactorizedMatrix.set(i,j,55);
+    //     }
+    // }
+    // std::cout << LUFactorizedMatrix << std::endl;
     
-    ju = 0; /// JU is the index of the last column affected by the current stage of the factorization
+    ju = 1; /// JU is the index of the last column affected by the current stage of the factorization
 
-    for (Index j=0; j <= std::min(nbRows,nbCols); j++)
+    for (Index j=1; j < std::min(nbRows+1,nbCols+1)-1; j++)
     {
+        std::cout << "PASSAGE DE J : " << j << std::endl;
+        std::cout << "std::min(nbRow,nbCol) : " << std::min(nbRows,nbCols) << std::endl;
+        
         /// Set fill-in elements in column J+KV to zero
-        if((j+nbSupDiagU) <= nbCols)
-        {
-            for (Index i = 0; i<= nbSubDiag; i++)
-            {
-                ///ab[i][j+kv] = 0;
-                LUFactorizedMatrix.add(i,j+nbSupDiagU,0);
-            }
-        }
-
+        // if((j+nbSupDiagU) < nbCols)
+        // {
+        //     for (Index i = 0; i< nbSubDiag; i++)
+        //     {
+        //         std::cout << "i = " << i<<std::endl;
+        //         std::cout<<"j = "<<j<<std::endl;
+        //         std::cout<<" j+nbSupDiagU = "<<j+nbSupDiagU<<std::endl;
+        //         ///ab[i][j+kv] = 0;
+        //         LUFactorizedMatrix.set(i,j+nbSupDiagU,0);
+        //     }
+        // }
+        
         /// Find pivot and test for singularity. KM is the number of subdiagonal elements in the current column km = std::min(kl, m-j)
         Index nbSubDiagElements = std::min(nbSubDiag, nbRows-j);
-
+        std::cout << "TEST 1 " << std::endl;
         ///jp = idamax(km+1, ab.element(kv+1,j), 1);
         ///jp = idamax(km+1, ab.getVector(kv+1,j), 1); /// jp ? Maybe index max for the pivot
 
         /// Trouver un moyen de naviguer entre la diagonal principal et le bas de la matrice dans LUFactorizedMatrix 
         ///Index j_pivot = indexMax(nbSubDiagElements + 1, *(ptr + nbSupDiagU + (j-1) * dimLUMatrix) ,1); 
-        Index j_pivot = indexMax2(nbSubDiagElements, LUFactorizedMatrix, 1, j, nbSupDiagU+1);
-
-        indexPivot[j] = j_pivot + j - 1;
+        Index j_pivot = indexMax2(nbSubDiagElements+1, LUFactorizedMatrix, 1, j, nbSupDiagU);
+        std::cout << "TEST 2 " << std::endl;
+        indexPivot[j-1] = j_pivot + j - 1 ;
         if( LUFactorizedMatrix.element(nbSupDiagU+j_pivot,j) != 0)
         {
+            std::cout << "TEST 3 " << std::endl;
             ju = std::max(ju, std::min(j+nbSupDiag+j_pivot-1,nbCols));
             /// Apply interchange to columns J to JU
             if(j_pivot != 1)
             {
+                std::cout << "TEST 4 " << std::endl;
                 ///Uniquement dans la partie L, on échange partiellement les vecteurs :
                 /// Idée : accéder à la matrice, se placer dans les deux colonnes et intervertir ?
                 ///dswap(ju-j+1, ab.element(kv+jp,j) , ldab-1, ab( kv+1, j ), ldab-1 );
                 ///swapVector(ju-j+1, LUFactorizedMatrix.getVector(nbSupDiagU+jp,j) , dimLUMatrix-1, LUFactorizedMatrix.getVector( kv+1, j ), dimLUMatrix-1 ); /// Forcément utiliser pointeur
 
-                Index nbElemToSwap = ju-j+1;
-                Index ix = 1;
-                Index iy = 1;
-                if(dimLUMatrix-1 < 0)
-                {
-                    ix = (-nbElemToSwap+1)*dimLUMatrix+1;
-                    iy = (-nbElemToSwap+1)*dimLUMatrix+1;
-                }
-                for(Index i=0; i<nbElemToSwap;i++)
-                {
-                    Index dtemp = LUFactorizedMatrix.element(nbSupDiagU+j_pivot+ix,j);
-                    LUFactorizedMatrix.set(nbSupDiagU+j_pivot+ix, j, LUFactorizedMatrix.element(nbSupDiagU+1+iy,j));
-                    LUFactorizedMatrix.set(nbSupDiagU+1+iy, j, dtemp);
-                    ix += dimLUMatrix;
-                    iy += dimLUMatrix;
-                }
-
-
+                swapVector2(ju-j+1,LUFactorizedMatrix, j,nbSupDiagU+j_pivot,dimLUMatrix-1,nbSupDiagU,dimLUMatrix-1);
             }
             if(nbSubDiagElements > 0)
             {
+                std::cout << "TEST 5 " << std::endl;
                 ///dscal( km, 1/ ab.element( kv+1, j ), ab.element( kv+2, j ), 1);
 
                 ///scaleVector( nbSubDiagElements, 1/ LUFactorizedMatrix.element( nbSupDiagU+1, j ), LUFactorizedMatrix.getVector( nbSupDiagU+2, j ), 1);
-                scaleVector2( nbSubDiagElements, 1/ LUFactorizedMatrix.element( nbSupDiagU+1, j ), LUFactorizedMatrix, 1, j);
+                scaleVector3( nbSubDiagElements, 1/ LUFactorizedMatrix.element( nbSupDiagU, j-1 ), LUFactorizedMatrix, 1, j, nbSupDiagU+1);
                 if(ju>j)
                 {
                     ///dger(km, ju-j, -1, ab.element(kv+2,j), 1, ab.element(kv,j+1), ldab-1, ab.element(kv+1,j+1),ldab-1 );
-                    rank1MatrixUpdate(nbSubDiagElements, ju-j, -1, LUFactorizedMatrix.getVector(nbSupDiagU+2,j), 1, LUFactorizedMatrix.getVector(nbSupDiagU,j+1), dimLUMatrix-1, LUFactorizedMatrix );
+                    //std::cout << LUFactorizedMatrix << std::endl;
+                    //std::cout << "nbSupDiagU = " << nbSupDiagU << std::endl;
+                    //std::cout << "j = " << j << std::endl;
+                    //std::cout << "vector x = " << LUFactorizedMatrix.getVector(nbSupDiagU+1,j) << std::endl;
+                    //std::cout << "vector y = " << LUFactorizedMatrix.getVector(nbSupDiagU-1,j+1) << std::endl;
+                    std::cout << "TEST 6 " << std::endl;
+                    std::cout <<"MATRIX JUSTE AVANT RANK1 = "<< LUFactorizedMatrix << std::endl;
+                    ///rank1MatrixUpdate(nbSubDiagElements, ju-j, -1, LUFactorizedMatrix.getVector(nbSupDiagU+1,j), 1, LUFactorizedMatrix.getVector(nbSupDiagU-1,j+1), dimLUMatrix-1, LUFactorizedMatrix );                    
+                    rank1MatrixUpdate2(nbSubDiagElements, ju-j, -1, LUFactorizedMatrix, nbSupDiagU+2,j , 1, nbSupDiagU, j+1, dimLUMatrix-1, LUFactorizedMatrix );
                 }
             }
         }
-        
+        std::cout << "TEST 7 je crois que c'est ici" << std::endl;
     }
 } 
 
@@ -380,7 +563,7 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
     }
     else
     {
-        kx = 1;
+        kx = 0;
     }
 
     /*
@@ -417,7 +600,7 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
                 Index l = kplus1 - j;
                 x[jx] = x[jx]/ Matrix(kplus1,j);
                 Index temp = x[j];
-                for(Index i=j+1; std::min(matrixOrder,j+nbSupDiag); i++)
+                for(Index i=j-1; std::max(matrixOrder,j+nbSupDiag); i--)
                 {
                     x[ix]= x[ix] - temp*Matrix.element(l+i,j);
                     ix = ix - incrementX; 
@@ -432,7 +615,7 @@ template <class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix, TVector>::solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB)
 {
     Index nbRow = LUFactorizedMatrix.rowSize();
-
+    
     /*
     Solve L*x=B, overwriting B with X
 

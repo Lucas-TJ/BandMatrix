@@ -32,6 +32,14 @@
 namespace testing
 {
 
+template<class TMatrix, sofa::Index TNbRows, sofa::Index TNbCols, class TReal >
+struct TestBaseMatrixTraits
+{
+    using Matrix = TMatrix;
+    static constexpr sofa::Index NbRows = TNbRows;
+    static constexpr sofa::Index NbCols = TNbCols;
+    using Real = TReal;
+};
 /*
 TEST(BandMatrixSolver, indexMax)
 {
@@ -72,7 +80,7 @@ public:
 
     void checkindexMax2()
     {
-        using MatrixType = sofa::linearalgebra::FullMatrix<SReal>;
+        using MatrixType = sofa::linearalgebra::BandMatrix<SReal>;
 
         MatrixType matrix;
         matrix.resize(4, 4);
