@@ -33,8 +33,6 @@
 #include <sofa/type/Mat.h>
 #include <sofa/type/vector.h>
 
-
-
 namespace sofa::component::linearsolver::direct
 {
 /// Linear system solver using Gaussian elimination for Banded matrices
@@ -59,9 +57,7 @@ public:
     void reset() override {}
 
     ///typename Matrix::InvMatrixType Minv;  
-
     ////////////////////////////
-
 
 protected:
     
@@ -70,8 +66,6 @@ protected:
     Vector indexPivot;
     
 public:
-
-    
 
     void invert(Matrix& M) override;
 
@@ -90,51 +84,37 @@ public:
     /// @param dx the vector
     /// @param increment storage spacing between elements of dx
     /// @return The index max of the vector
-    Index indexMax(Index nbElem, const Vector& dx, Index increment);
-    static Index indexMax2(Index nbElem, const Matrix& M, Index increment, Index currentColumn, Index indexDiagP);
+    static Index indexMax(Index nbElem,  Real * dx, Index increment);
 
-    
     /// @brief This function performs the rank 1 operation.
     ///        A := alpha * x * y**T + A
     ///        where alpha is a scalar, x is an m element vector, y is an n element vector and A is an m by n matrix
     /// @param nbRows the number of Rows
     /// @param nbCols the number of Columns
     /// @param alpha a scalar
-    /// @param x vector x
+    /// @param x vector x (as pointer)
     /// @param incrementX increment of x 
-    /// @param y vector y
+    /// @param y vector y (as pointer)
     /// @param incrementY increment of y 
-    /// @param updatedMatrix Matrix which we want to update
-    static void rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Vector x, Index incrementX, Vector y, Index incrementY, Matrix& updatedMatrix);
-    static void rank1MatrixUpdate2(Index nbRows, Index nbCols, Real alpha,  Matrix& matrix, Index rowOfM1, Index colOfM1 ,Index incrementX, Index rowOfM2, Index colOfM2, Index incrementY, Matrix& updatedMatrix);
+    /// @param updatedMatrix Matrix which we want to update (as pointer)
+    static void rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Real * x, Index incrementX, Real * y, Index incrementY, Real * updatedMatrix);
 
-    void swapVector(Index n, Vector x, Index incx, Vector y, Index incy);
-
-    /// @brief 
-    /// @param nbElemToSwap 
-    /// @param M 
-    /// @param currentColumn 
-    /// @param indexOfM1 
-    /// @param incrementM1 
-    /// @param indexOfM2 
-    /// @param incrementM2 
-    static void swapVector2(Index nbElemToSwap, Matrix& M, Index currentColumn, Index indexOfM1, Index incrementM1, Index indexOfM2, Index incrementM2 );
+    /// @brief This function performs the rank 1 operation.
+    ///        A := alpha * x * y**T + A
+    ///        where alpha is a scalar, x is an m element vector, y is an n element vector and A is an m by n matrix
+    /// @param n number of elements
+    /// @param x vector x (as a pointer)
+    /// @param incx increment of x
+    /// @param y vector x (as a pointer)
+    /// @param incy increment of y 
+    static void swapVector(Index n, Real * x, Index incx, Real * y, Index incy); 
 
     /// @brief Scales a vector by a constant
     /// @param n number of elements in input vector
     /// @param a scalar a
     /// @param x vector which we want to scale
     /// @param incx storage spacing between elements of x
-    void scaleVector(Index n, SReal a, Vector x, Index incx);
-    /// @brief This is a variant of scaleVector, which use directly the Matrix with reference
-    /// @param nbElem number of elements in input Matrix at currentColumn
-    /// @param a scalar a
-    /// @param M matrix which we want to scale at column currentColumn
-    /// @param incx storage spacing between elements of x
-    /// @param currentColumn is the current column where we want to scale
-    static void scaleVector2(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP);
-
-    static void scaleVector3(Index nbElem, SReal a, Matrix& M, Index incx, Index currentColumn, Index indexDiagP); 
+    static void scaleVector(Index n, Real a, Real * x, Index incx); 
 
     /// @brief This function computes an LU factorization of a real band matrix using partial pivoting with row interchanges
     /// @param nbRows the number of rows
@@ -144,9 +124,8 @@ public:
     /// @param LUFactorizedMatrix Matrix contains LU factorization with :  U is stored as an upper triangular band matrix,
     /// and the multipliers used during the factorization are stored below
     /// @param dimLUMatrix the dimension of LUFactorizedMatrix
-    /// @param indexPivot the pivot indices
+    /// @param indexPivot the pivot indices    
     static void computeLUBandMatrix(Index nbRows, Index nbCols, Index nbSubDiag, Index nbSupDiag, Matrix& LUFactorizedMatrix, Index dimLUMatrix, Vector& indexPivot);
-    
 
     /// @brief This function solves the system of equations A*x=B. Where b and x are n elements vectors and A is as n by n band matrix with k+1 diagonals
     /// @param matrixOrder the order of the matrix A
@@ -155,10 +134,9 @@ public:
     /// @param dimMatrix the first dimension of matrix A
     /// @param x the vector x
     /// @param incrementX the increment for the elements of x
-    void solveUxB(Index matrixOrder, Index nbSupDiag, const Matrix& Matrix, Vector& x, Index incrementX );
+    static void solveUxB(Index matrixOrder, Index nbSupDiag, const Matrix& Matrix, Real * x, Index incrementX );
 
-
-    void solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB);
+    static void solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Vector& B, Index dimB);
 };
 
 #if !defined(SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP)
