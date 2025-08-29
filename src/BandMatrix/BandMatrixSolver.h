@@ -136,7 +136,7 @@ public:
     /// @param incrementX the increment for the elements of x
     static void solveUxB(Index matrixOrder, Index nbSupDiag, const Matrix& Matrix, Real * x, Index incrementX );
 
-    static void solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Vector& B, Index dimB);
+    static void solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB);
 };
 
 #if !defined(SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP)

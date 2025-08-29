@@ -27,6 +27,7 @@
 #include <sofa/core/ObjectFactory.h>
 #include <iostream>
 #include <sofa/helper/system/thread/CTime.h>
+#include <sofa/helper/AdvancedTimer.h>
 #include <sofa/core/objectmodel/BaseContext.h>
 #include <sofa/core/behavior/LinearSolver.h>
 #include <cmath>
@@ -43,6 +44,7 @@ BandMatrixSolver<TMatrix,TVector>::BandMatrixSolver()
 template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::invert(Matrix& M)
 {   
+    sofa::helper::AdvancedTimer::stepBegin("computeLU");
     LUFactorizedMatrix = M;
     
     Index nbRows = LUFactorizedMatrix.rowSize();
@@ -50,28 +52,46 @@ void BandMatrixSolver<TMatrix,TVector>::invert(Matrix& M)
     Index nbSubDiag = nbCols / 2;
     Index nbSupDiag = nbCols / 2;
     Index dimLUMatrix = nbCols ;
-    std::cout << "TEST" << std::endl;
     indexPivot.resize(std::min(nbRows,nbCols));
     computeLUBandMatrix(nbRows, nbCols, nbSubDiag, nbSupDiag, LUFactorizedMatrix, dimLUMatrix-1, indexPivot);
+    sofa::helper::AdvancedTimer::stepEnd("computeLU");
+    
 }
 
 /// This function will call every methods from LAPACK to solve the system
 template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::solve (Matrix& /*M*/, Vector& x, Vector& b)
 {
+    
     Index nbSubDiag = LUFactorizedMatrix.colSize() / 2;
     Index nbSupDiag = LUFactorizedMatrix.colSize() / 2;
-    Index matrixOrder = LUFactorizedMatrix.rowSize();
+    Index matrixOrder = LUFactorizedMatrix.colSize();
+
     Index nbColumnB = 1;
     Index dimB = b.size();
-    
-    //solveAxB(matrixOrder, nbSubDiag,nbSupDiag, nbColumnB, LUFactorizedMatrix, indexPivot, b, dimB);
+    Index dimx = x.size();
 
+    Matrix B;
+    B.resize(dimB,1);
+    for(Index i = 0; i<dimB; i++)
+    {
+        B.set(i,0,b[i]);
+    }
+    
+    std::cout << "Voici b "<<std::endl;
+    std::cout << b << std::endl;
+    
+    //std::cout << B << std::endl;
+    // std::cout <<"=================================================================="<< std::endl;
+    solveAxB(matrixOrder, nbSubDiag,nbSupDiag, nbColumnB, LUFactorizedMatrix, indexPivot, B, dimB);
+    // std::cout << B << std::endl;
     // This happens because in "solveAxB", the parameter "b" is in input and output
     for(Index i = 0; i<dimB;i++)
     {
-        x[i] = b[i]; 
+        x[i] = B.element(i,0); 
+        
     }
+
 }
 
 template<class TMatrix, class TVector>
@@ -180,6 +200,7 @@ void BandMatrixSolver<TMatrix,TVector>::rank1MatrixUpdate(Index nbRows, Index nb
 template<class TMatrix, class TVector>
 void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Real * x, Index incx, Real * y, Index incy) 
 {
+    
     if(n <= 0 ) return;
     // code for both increments equal to 1
     if(incx == 1 && incy == 1)
@@ -189,7 +210,7 @@ void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Real * x, Index incx
         {
             for(Index i = 0 ; i<m ; i++)
             {
-                Index dtemp = x[i];
+                Real dtemp = x[i];
                 x[i] = y[i];
                 y[i] = dtemp;
             }
@@ -198,7 +219,7 @@ void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Real * x, Index incx
         Index mp1 = m + 1;
         for(Index i = mp1 - 1; i<n; i+=3 )
         {
-            Index dtemp = x[i];
+            Real dtemp = x[i];
             x[i]=y[i];
             y[i]=dtemp;
             dtemp = x[i+1];
@@ -219,7 +240,7 @@ void BandMatrixSolver<TMatrix,TVector>::swapVector(Index n, Real * x, Index incx
         if(incy < 0) iy = (-n+1)*incy;
         for(Index i = 0; i<n; i++)
         {
-            Index dtemp = x[ix];
+            Real dtemp = x[ix];
             x[ix] = y[iy];
             y[iy] = dtemp;
             ix += incx;
@@ -276,20 +297,22 @@ void BandMatrixSolver<TMatrix,TVector>::computeLUBandMatrix(Index nbRows, Index 
     Index ju;
 
     Index nbSupDiagU = nbSupDiag + nbSubDiag ;
-
+    
     // TestMatrix en un tableau 1D (mieux pour parcourir)
     sofa::type::vector<Real> TestMatrix;
     TestMatrix.resize(nbCols * (nbSupDiagU+1+nbSubDiag));
     Index colTestMatrix = nbSupDiagU + 1 + nbSubDiag;
+    //Index colTestMatrix = nbRows;
+
     for(Index i=0 ; i< nbRows; i++)
     {
-        for(Index j = nbSupDiagU; j>-1; j--)
+
+        for(Index j = nbSupDiagU+1; j>-1; j--)
         {
-            TestMatrix[i*colTestMatrix+j+nbSubDiag] = LUFactorizedMatrix.element(j,i);
+            TestMatrix[i*colTestMatrix+j+nbSubDiag-1] = LUFactorizedMatrix.element(j,i);
             //LUFactorizedMatrix.set(i,j,0);
         }
     }
-    
     LUFactorizedMatrix.resize(nbSupDiagU+1+nbSubDiag,nbCols);
     for(Index i = colTestMatrix ; i > -1; i--)
     {
@@ -301,7 +324,7 @@ void BandMatrixSolver<TMatrix,TVector>::computeLUBandMatrix(Index nbRows, Index 
     }
 
     ju = 0 ;
-
+    
     Real * ptr = TestMatrix.data() ;
     for(Index j = 0; j < std::min(nbRows,nbCols); j++ )
     {
@@ -317,8 +340,9 @@ void BandMatrixSolver<TMatrix,TVector>::computeLUBandMatrix(Index nbRows, Index 
             }
             if(nbSubDiagElements > 0)
             {
-                Real onedivideby = 1./LUFactorizedMatrix.element(nbSupDiagU,j);
-                scaleVector(nbSubDiagElements, onedivideby, ptr + colTestMatrix*j+(nbSupDiagU+1) ,1 );
+                // Real onedivideby = 1./LUFactorizedMatrix.element(nbSupDiagU,j);
+                Real valdiv = *(ptr + colTestMatrix*j + nbSupDiagU);
+                scaleVector(nbSubDiagElements, 1./(valdiv), ptr + colTestMatrix*j+(nbSupDiagU+1) ,1 );
                 if(ju>j)
                 {
                     rank1MatrixUpdate(nbSubDiagElements, ju-j, -1, ptr + colTestMatrix*(j) + (nbSupDiagU+1), 1, ptr + colTestMatrix*(j+1) + (nbSupDiagU-1), dimLUMatrix-1, ptr + colTestMatrix*(j+1) + (nbSupDiagU));
@@ -344,9 +368,9 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
     Index kx;
     if(incrementX <= 0)
     {
-        kx = 1 - (matrixOrder-1)*incrementX;
+        kx = 1 - (matrixOrder-1)*incrementX - 1;
     }
-    else
+    else if(incrementX != 1)
     {
         kx = 0;
     }
@@ -356,16 +380,17 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
     */
 
     Index kplus1 = nbSupDiag + 1;
+
     if (incrementX == 1)
     {
-        for (Index j=matrixOrder; j>1 ; j--)
+        for (Index j=matrixOrder-1; j>=0 ; j--)
         {
             if( x[j] != 0 )
             {
-                Index l = kplus1 - j;
-                x[j] = x[j]/Matrix.element(kplus1,j);
-                Index temp = x[j];
-                for (Index i =j-1; i> std::max(1,j-nbSupDiag); i--)
+                Index l = kplus1 - j -1;
+                x[j] = x[j] / Matrix.element(kplus1-1,j);
+                Real temp = x[j];
+                for (Index i =j-1; i>= std::max(1,j-nbSupDiag)-1; i--)
                 {
                     x[i]= x[i]-temp*Matrix.element(l+i,j);
                 }
@@ -374,18 +399,18 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
     }
     else
     {
-        kx = kx + (matrixOrder-1)*incrementX;
+        kx = kx + (matrixOrder-1)*incrementX - 1;
         Index jx = kx;
-        for(Index j = matrixOrder; j>1; j--)
+        for(Index j = matrixOrder-1; j>=0; j--)
         {
             kx = kx - incrementX;
             if(x[jx] != 0)
             {
                 Index ix = kx;
                 Index l = kplus1 - j;
-                x[jx] = x[jx]/ Matrix(kplus1,j);
-                Index temp = x[j];
-                for(Index i=j-1; std::max(matrixOrder,j+nbSupDiag); i--)
+                x[jx] = x[jx]/ Matrix(kplus1-1,j);
+                Real temp = x[j];
+                for(Index i=j-1; i >= std::max(matrixOrder,j+nbSupDiag)-1; i--)
                 {
                     x[ix]= x[ix] - temp*Matrix.element(l+i,j);
                     ix = ix - incrementX; 
@@ -397,53 +422,107 @@ void BandMatrixSolver<TMatrix,TVector>::solveUxB(Index matrixOrder, Index nbSupD
 }
 
 template <class TMatrix, class TVector>
-void BandMatrixSolver<TMatrix, TVector>::solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Vector& B, Index dimB)
+void BandMatrixSolver<TMatrix, TVector>::solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB)
 {
     Index nbRow = LUFactorizedMatrix.rowSize();
     Index nbCols = LUFactorizedMatrix.colSize();
     Index nbSupDiagU = nbSubDiag + nbSupDiag;
-
+    
     /*
     Solve L*x=B, overwriting B with X
 
     L is represented as a product of permutations and unit lower triangular matrices L = P(1) * L(1)* ... *P(n-1) * L(n-1)
     where each transformation L(i) is a rank-one modification of the identity matrix
     */
+    
 
     sofa::type::vector<Real> TestMatrix;
     TestMatrix.resize(nbCols * (nbSupDiagU+1+nbSubDiag));
     Index colTestMatrix = nbSupDiagU + 1 + nbSubDiag;
-    for(Index i=0 ; i< nbRow; i++)
+    // for(Index i=0 ; i< nbSupDiagU-1; i++)
+    // {
+    //     for(Index j = nbSupDiagU-1; j>=0; j--)
+    //     {
+            
+    //         TestMatrix[i*colTestMatrix+j+nbSubDiag] = LUFactorizedMatrix.element(j,i);
+    //     }
+    // }
+    
+
+    for(Index i=0 ; i< matrixOrder; i++)
     {
-        for(Index j = nbSupDiagU; j>-1; j--)
+        for(Index j = nbSupDiagU+1; j>-1; j--)
         {
-            TestMatrix[i*colTestMatrix+j+nbSubDiag] = LUFactorizedMatrix.element(j,i);
+            TestMatrix[i*colTestMatrix+j+nbSubDiag-1] = LUFactorizedMatrix.element(j,i);
+            //LUFactorizedMatrix.set(i,j,0);
         }
     }
+
     Real * ptr = TestMatrix.data();
     
+
+    sofa::type::vector<Real> B_v;
+    B_v.resize(B.rowSize());
+    Index SizeB_v = B_v.size();
+    for(Index i=0; i< SizeB_v; i++)
+    {
+        B_v[i] = B.element(i,0);
+        std::cout << "Pour i = " <<i<<", on a B_v = "<<B_v[i]<<", et B[i,0] = " <<B.element(i,0)<< std::endl;
+    }
+
+    
+    // std::cout << "===================1===================" << std::endl;
+    // std::cout << B_v << std::endl;
+
+    Real * ptr2 = B_v.data();
+
     if(nbSubDiag > 0)
     {
-        for(Index j=0; j <= matrixOrder-1; j++)
+        
+        for(Index j=0; j < matrixOrder-1; j++)
         {
+            
             Index lm = std::min(nbSubDiag, matrixOrder-j);
+            
             Index l = indexPivot[j];
             if(l!=j)
             {
-                //swapVector2(nbColumnB, B, 0, l, dimB, j, dimB);
-                swapVector(1, B.ptr()+l, dimB, B.ptr() + j, dimB);
+                // std::cout << "==================swapVector====================" << std::endl;
+                // // std::cout << B_v << std::endl;
+                // //swapVector2(nbColumnB, B, 0, l, dimB, j, dimB);
+                // std::cout << "taille de ptr2 = " << B_v.size() << std::endl;
+                // std::cout << "l = " << l << std::endl;
+                // std::cout << "j = " << j << std::endl;
+                // std::cout << "ptr2 + l = " << *(ptr2+l) << std::endl;
+                // std::cout << "ptr2 + j = " << *(ptr2+j) << std::endl;
+                swapVector(1, ptr2+l, dimB, ptr2 + j, dimB);
 
             }
-
+            // std::cout << "==================Rank1Matrix=== j = " << j <<  std::endl;
+            // std::cout << B_v << std::endl;
             // rank1MatrixUpdate(lm, nbColumnB, -1, LUFactorizedMatrix.getVector(nbRow+1,j), 1, B.getVector(j,0), dimB, B);
-            rank1MatrixUpdate(lm, nbColumnB, -1, ptr + j*colTestMatrix + nbRow+1, 1, B.ptr() + j, dimB, B.ptr() + j + 1);
+            rank1MatrixUpdate(lm, nbColumnB, -1., ptr + j*colTestMatrix + nbSupDiagU+1, 1, ptr2 + j, dimB, ptr2 + j + 1);
         }
     }
-    for(Index i=1; i < nbColumnB; i++)
+
+    
+
+    for(Index i=0; i < nbColumnB; i++)
     {
         //Vector BVec = B.getVector(0,i);
-        solveUxB(matrixOrder, nbSubDiag + nbSupDiag, LUFactorizedMatrix, B.ptr() + i ,1);
+        
+        solveUxB(matrixOrder, nbSubDiag + nbSupDiag, LUFactorizedMatrix, ptr2 ,1);
     }
+    
+    // std::cout << "=================3=====================" << std::endl;
+    // std::cout << B_v << std::endl;
+    
+    for(Index i=0; i< SizeB_v; i++)
+    {
+        B.set(i,0,B_v[i]);
+    }
+    
+    std::cout << "FIN DE SOLVE" << std::endl;
 }
 
 
