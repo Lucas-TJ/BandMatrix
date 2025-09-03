@@ -30,6 +30,47 @@
 
 #include <sofa/linearalgebra/FullMatrix.h>
 
+TEST(BandMatrixSolver,indexMax)
+{
+    /*
+    This unit test is about the function indexMax2. indexMax2 returns the index from a column in a matrix which has the maximum value.
+    We construct a matrix like this :
+        0 | 1 | 2 | 3
+        1 | 2 | 3 | 4
+        2 | 3 | 4 | 5
+        3 | 4 | 5 | 6
+
+    Then, we test indexMax with different parameter (nbElem, Matrix, increment, currentColumn, DiagP)
+    */
+    sofa::helper::logging::MessageDispatcher::addHandler(sofa::testing::MainGtestMessageHandler::getInstance() ) ;
+    
+    using MatrixType = sofa::linearalgebra::BandMatrix<SReal>;
+
+    sofa::type::vector<double> matrix;
+    matrix.resize(4*4);
+
+
+    for(auto i = 0; i < 4; i++)
+    {
+        for(auto j = 0 ; j < 4 ; j++)
+        {
+            matrix[4*i+j]= i+j;
+        }
+    }
+    double * ptr = matrix.data();
+
+
+    using Solver = sofa::component::linearsolver::direct::BandMatrixSolver<MatrixType, sofa::linearalgebra::FullVector<SReal> >;
+    ///const Solver::SPtr solver = sofa::core::objectmodel::New<Solver>();
+
+    /// Test when increment == 1 : 
+    EXPECT_EQ(Solver::indexMax(4,ptr,1),3);
+    EXPECT_EQ(Solver::indexMax(4,ptr+4,1),3);
+    EXPECT_EQ(Solver::indexMax(4,ptr+4*2,1),3);
+    /// Test when increment != 1 :
+    EXPECT_EQ(Solver::indexMax(2,ptr,2),1);
+};
+
 TEST(BandMatrixSolver, swapVector)
 {
     /*
@@ -367,10 +408,27 @@ TEST(BandMatrixSolver, SolveAxB)
     std::cout << "Voici B" << std::endl;
     std::cout << B << std::endl;
 
+    // using VectorType = sofa::linearalgebra::FullVector<SReal>;
+    // VectorType B;
+    // // sofa::type::vector<double> B;
+    // B.resize(4);
+    // // B.add(0,5);
+    // // B.add(1,10);
+    // // B.add(2,15);
+    // // B.add(3,10);
+
+    // B[0] = 5;
+    // B[1] = 10;
+    // B[2] = 15;
+    // B[3] = 10 ;
+
     Solver::solveAxB(matrixOrder, nbSubDiag, nbSupDiag, nbColumnB, matrix, indexPivot, B, dimB);
 
     std::cout << "VOICI LE RESULTAT FINAL : " << std::endl;
     std::cout << B << std::endl;
+
+    std::cout << "ipiv = " << std::endl;
+    std::cout << indexPivot << std::endl;
     
 }
 

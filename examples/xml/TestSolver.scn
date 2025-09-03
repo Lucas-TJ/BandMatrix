@@ -12,6 +12,7 @@
         <RequiredPlugin name="SofaMatrix"/> <!-- Needed to use components [GlobalSystemMatrixExporter] -->
         <RequiredPlugin name="BandMatrix"/>
         <RequiredPlugin name="CSparseSolvers"/> <!-- Needed to use components [SparseLUSolver] -->
+        <RequiredPlugin name="Sofa.Component.LinearSystem"/> <!-- Needed to use components [MatrixLinearSystem] --> 
     </Node>
 
 
@@ -20,7 +21,7 @@
     <DefaultAnimationLoop name="animationLoop"/>
     <DefaultVisualManagerLoop name="visualLoop"/>
 
-    <Node name="M2">
+    <!-- <Node name="M2">
         <EulerImplicitSolver name="odesolver" rayleighStiffness="0.1" rayleighMass="0.1" />
         <NaturalOrderingMethod/>
         <SparseLUSolver template="CompressedRowSparseMatrixMat3x3"/>
@@ -31,7 +32,7 @@
         <BoxROI name="box" box="-10 -1 -0.0001  -5 4 0.0001"/>
         <FixedProjectiveConstraint indices="@box.indices" />
         <HexahedronFEMForceField name="FEM" youngModulus="4000" poissonRatio="0.3" method="large" />
-    </Node>
+    </Node>-->
 
     <Node name="M1">
         <EulerImplicitSolver name="odesolver" printLog="false"  rayleighStiffness="0.1" rayleighMass="0.1" />
@@ -43,7 +44,7 @@
         <RegularGridTopology nx="4" ny="4" nz="10" xmin="-9" xmax="-6" ymin="0" ymax="3" zmin="0" zmax="9" />
         <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15" />
         <HexahedronFEMForceField name="FEM" youngModulus="4000" poissonRatio="0.3" method="large" />
-    </Node>
+    </Node> 
 
 
    <Node name="M3">
