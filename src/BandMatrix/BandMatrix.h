@@ -43,19 +43,20 @@ namespace sofa::linearalgebra
             enum { category = MATRIX_BAND };
             typedef T Real;
             typedef FullVector<Real> Vector;
-            ///typedef BandMatrix<T> Matrix;
             using linearalgebra::BaseMatrix::Index;
-            ///typedef typename sofa::type::vector vector;
             
 
 
         protected:
             sofa::type::vector<sofa::type::vector<T>> data;
-            ///Matrix matrix;
-            
             Index nbRow, nbCol;
             Index bandwidth;
+
+            /// Get the index corresponding to the place in the band
             Index getBandIndex(Index i, Index j, int bandwidth) const;
+
+            /// Check if the data is inside the band. 
+            /// If the data is not inside the band, the bandwidth will adapt his width in order to fit with the data
             void insideBand(Index i, Index j, int band);
             
         
@@ -64,18 +65,25 @@ namespace sofa::linearalgebra
 
             ~BandMatrix() override;
 
+            /// Resize the matrix and reset all values to 0
             void resize(Index nbRow, Index nbCol) override;
 
+            /// Number of rows
             Index rowSize(void) const override;
 
+            /// Number of columns
             Index colSize(void) const override;
 
+            /// Read the value of the element at row i, column j (using 0-based indices)
             SReal element(Index i, Index j) const override;
 
+            /// Write the value of the element at row i, column j (using 0-based indices)
             void set(Index i, Index j, double v) override;
 
+            /// Add v to the existing value of the element at row i, column j (using 0-based indices)
             void add(Index i, Index j, double v) override;
 
+            /// Reset all values to 0
             void clear() override;
             
             Vector getVector(Index i, Index j);

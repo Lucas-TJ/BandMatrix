@@ -97,7 +97,8 @@ public:
     /// @param y vector y (as pointer)
     /// @param incrementY increment of y 
     /// @param updatedMatrix Matrix which we want to update (as pointer)
-    static void rank1MatrixUpdate(Index nbRows, Index nbCols, Real alpha, Real * x, Index incrementX, Real * y, Index incrementY, Real * updatedMatrix);
+    static void rank1MatrixUpdate(
+        Index nbRows, Index nbCols, Real alpha, Real * x, Index incrementX, Real * y, Index incrementY, Real * updatedMatrix);
 
     /// @brief This function performs the rank 1 operation.
     ///        A := alpha * x * y**T + A
@@ -107,7 +108,8 @@ public:
     /// @param incx increment of x
     /// @param y vector x (as a pointer)
     /// @param incy increment of y 
-    static void swapVector(Index n, Real * x, Index incx, Real * y, Index incy); 
+    static void swapVector(
+        Index n, Real * x, Index incx, Real * y, Index incy); 
 
     /// @brief Scales a vector by a constant
     /// @param n number of elements in input vector
@@ -125,7 +127,8 @@ public:
     /// and the multipliers used during the factorization are stored below
     /// @param dimLUMatrix the dimension of LUFactorizedMatrix
     /// @param indexPivot the pivot indices    
-    static void computeLUBandMatrix(Index nbRows, Index nbCols, Index nbSubDiag, Index nbSupDiag, Matrix& LUFactorizedMatrix, Index dimLUMatrix, Vector& indexPivot);
+    static void computeLUBandMatrix(
+        Index nbRows, Index nbCols, Index nbSubDiag, Index nbSupDiag, Matrix& LUFactorizedMatrix, Index dimLUMatrix, Vector& indexPivot);
 
     /// @brief This function solves the system of equations A*x=B. Where b and x are n elements vectors and A is as n by n band matrix with k+1 diagonals
     /// @param matrixOrder the order of the matrix A
@@ -134,9 +137,20 @@ public:
     /// @param dimMatrix the first dimension of matrix A
     /// @param x the vector x
     /// @param incrementX the increment for the elements of x
-    static void solveUxB(Index matrixOrder, Index nbSupDiag, const Matrix& Matrix, Real * x, Index incrementX );
+    static void solveUxB(Index matrixOrder, Index nbSupDiag, Real * Matrix, Real * x, Index incrementX , Index nbCol);
 
-    static void solveAxB(Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB);
+    /// @brief This function solves a system of linear equations A * X = B, with a general band matrix A using the LU factorization
+    /// @param matrixOrder the order of the matrix
+    /// @param nbSubDiag the number of subdiagonals within the band
+    /// @param nbSupDiag the number of superdiagonals within the band
+    /// @param nbColumnB the number of right hand sides, i.e., the number of comulmns of the matrix B
+    /// @param LUFactorizedMatrix Matrix contains LU factorization with :  U is stored as an upper triangular band matrix,
+    /// and the multipliers used during the factorization are stored below
+    /// @param indexPivot the pivot indicies
+    /// @param B On entry, the right hand side matrix B. On exit, the solution X
+    /// @param dimB the dimension of the array B
+    static void solveAxB(
+        Index matrixOrder, Index nbSubDiag, Index nbSupDiag, Index nbColumnB, Matrix& LUFactorizedMatrix, Vector indexPivot, Matrix& B, Index dimB);
 };
 
 #if !defined(SOFA_COMPONENT_LINEARSOLVER_BANDMATRIXSOLVER_CPP)

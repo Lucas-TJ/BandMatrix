@@ -147,11 +147,6 @@ namespace sofa::linearalgebra
     template<typename T>
     void BandMatrix<T>::clear()
     {
-        // nbRow = 0;
-        // nbCol = 0;
-        // bandwidth = 0;
-        // data.clear();
-
         for (auto& d : data)
             for (auto& e : d)
                 e = 0;
